@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LGPay - Complete App</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; }
+        body { background: #f5f8fc; color: #0b1a2e; min-height: 100vh; display: flex; justify-content: center; }
+        .app { width: 100%; max-width: 430px; padding: 16px 16px 80px; position: relative; min-height: 100vh; }
+        .page { display: none; animation: fadeIn 0.25s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .auth-page { display: block; max-width: 430px; margin: 0 auto; min-height: 100vh; background: #f5f7fb; padding-bottom: 40px; }
+        .auth-header { height: 140px; background: #fff; display: flex; align-items: center; justify-content: center; position: relative; }
+        .auth-header h1 { color: #159567; font-size: 32px; }
+        .auth-back { position: absolute; left: 22px; font-size: 38px; color: #159567; cursor: pointer; background: none; border: none; padding: 0; }
+        .login-box, .register-box { padding: 35px 28px; }
+        .register-box { display: none; }
+        .auth-logo { display: block; width: 110px; height: 110px; object-fit: contain; margin: 15px auto 8px; }
+        .auth-logo-name { text-align: center; font-size: 40px; font-weight: bold; margin-bottom: 70px; color: #0b1a2e; }
+        .auth-input { height: 68px; background: #fff; border: 2px solid #dce8e5; border-radius: 35px; display: flex; align-items: center; padding: 0 22px; margin: 18px 0; }
+        .auth-input span { font-size: 25px; margin-right: 14px; color: #159567; }
+        .auth-input input { border: none; outline: none; width: 100%; font-size: 20px; background: transparent; }
+        .phone-group { display: flex; align-items: center; width: 100%; }
+        .country-code { padding-right: 12px; margin-right: 12px; border-right: 1px solid #ddd; color: #159567; font-weight: bold; }
+        .auth-options { display: flex; justify-content: space-between; font-size: 16px; color: #159567; margin: 20px 5px 35px; }
+        .auth-options button { color: #159567; text-decoration: underline; cursor: pointer; background: none; border: none; font-size: 16px; }
+        .auth-remember { display: flex; gap: 6px; align-items: center; }
+        .auth-agree { font-size: 15px; color: #159567; margin-bottom: 20px; }
+        .auth-btn { width: 100%; height: 65px; border: none; border-radius: 35px; background: #159567; color: white; font-size: 24px; font-weight: bold; cursor: pointer; }
+        .auth-btn:active { transform: scale(0.97); }
+        .auth-forgot { display: block; text-align: center; margin-top: 55px; font-size: 17px; color: #159567; text-decoration: underline; cursor: pointer; background: none; border: none; }
+
+        .header { height: 155px; padding: 18px 0 0; display: flex; justify-content: space-between; align-items: flex-start; }
+        .profile { display: flex; align-items: center; gap: 13px; }
+        .avatar { width: 48px; height: 48px; border-radius: 50%; background: #e8f0ff; position: relative; flex: none; }
+        .avatar:before { content: ""; position: absolute; width: 15px; height: 15px; border-radius: 50%; background: #78a8e6; left: 17px; top: 7px; }
+        .avatar:after { content: ""; position: absolute; width: 31px; height: 20px; border-radius: 30px 30px 8px 8px; background: #78a8e6; left: 8px; bottom: 7px; }
+        .username { font-size: 22px; font-weight: 800; line-height: 1; color: #0b1a2e; }
+        .id { font-size: 14px; margin-top: 6px; color: #5e6f88; }
+        .id .copy { display: inline-flex; align-items: center; justify-content: center; width: 25px; height: 23px; margin-left: 7px; border-radius: 18px; background: #e4ebeb; color: #139565; font-size: 13px; cursor: pointer; }
+        .bell { font-size: 27px; color: #333; line-height: 1; }
+        .balance { height: 175px; margin: 0 0 14px; padding: 21px; border-radius: 18px; overflow: hidden; position: relative; color: #fff; background: radial-gradient(circle at 104% 2%, #f5c82d 0 70px, transparent 71px), radial-gradient(circle at 105% 54%, #4d83df 0 105px, transparent 106px), radial-gradient(circle at -5% 105%, #20b879 0 80px, transparent 81px), #079f62; }
+        .balance-title { font-size: 17px; font-weight: 700; }
+        .balance .amount { font-size: 39px; font-weight: 800; margin-top: 10px; }
+        .balance .detail { position: absolute; right: 21px; top: 101px; width: 120px; height: 39px; border: 0; border-radius: 35px; background: #fff; color: #0b1a2e; font-size: 17px; font-weight: 700; cursor: pointer; }
+        .stats { height: 82px; margin: 0 0 14px; border-radius: 18px; overflow: hidden; display: flex; color: #fff; background: radial-gradient(circle at -3% 2%, #4384d7 0 67px, transparent 68px), radial-gradient(circle at 105% 105%, #e5c82f 0 75px, transparent 76px), #079d61; }
+        .stat { width: 50%; min-width: 0; position: relative; padding: 15px 3px 0 43px; }
+        .stat:first-child { border-right: 2px solid rgba(255,255,255,.35); }
+        .arrow { position: absolute; left: 18px; top: 29px; font-size: 17px; }
+        .up { color: #079a60; }
+        .down { color: #ef3946; }
+        .stat-title { font-size: 16px; line-height: 20px; white-space: nowrap; overflow: hidden; text-overflow: clip; }
+        .stat-value { font-size: 18px; font-weight: 800; margin-top: 7px; }
+        .menu { width: 100%; height: 87px; margin: 0 0 14px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+        .menu-item { min-width: 0; text-align: center; position: relative; cursor: pointer; }
+        .menu-item .icon { width: 100%; height: 55px; border-radius: 12px; background: #effaf7; display: flex; align-items: center; justify-content: center; font-size: 27px; color: #0b1a2e; }
+        .menu-item .label { font-size: 14px; margin-top: 6px; color: #5e6f88; }
+        .menu-item .badge { position: absolute; top: -6px; right: -3px; background: #139565; color: #fff; font-size: 9px; font-weight: bold; padding: 4px 6px; border-radius: 15px; z-index: 2; }
+        .newcomer { height: 130px; margin: 0 0 14px; padding: 17px 16px; border-radius: 18px; position: relative; overflow: hidden; background: radial-gradient(circle at 105% 5%, #e5ebf1 0 90px, transparent 91px), #dce4ed; }
+        .newcomer .multi { position: absolute; right: 14px; top: 15px; background: #edf1f5; color: #697688; padding: 6px 9px; border-radius: 25px; font-size: 10px; font-weight: bold; }
+        .newcomer .new-title { color: #667486; font-size: 12px; letter-spacing: 1px; font-weight: 800; }
+        .newcomer .not-started { color: #314057; font-size: 23px; font-weight: 800; margin-top: 6px; }
+        .newcomer .new-text { color: #687687; font-size: 14px; line-height: 1.35; margin-top: 6px; max-width: 440px; }
+        .transactions { height: 175px; margin: 0; background: #fff; border-radius: 18px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .trans-head { display: flex; justify-content: space-between; align-items: center; }
+        .trans-title { font-size: 19px; font-weight: 800; color: #0b1a2e; }
+        .see { color: #3974ce; font-size: 16px; cursor: pointer; }
+        .empty { text-align: center; margin-top: 25px; }
+        .empty-title { font-size: 16px; font-weight: 800; color: #0b1a2e; }
+        .empty-text { color: #a4acb7; font-size: 14px; margin-top: 8px; }
+        .topup { margin-top: 10px; border: 0; background: #139565; color: #fff; padding: 8px 17px; border-radius: 32px; font-size: 15px; font-weight: 800; cursor: pointer; }
+
+        .deposit-header { display: flex; align-items: center; justify-content: center; position: relative; padding: 6px 0 16px; }
+        .deposit-header .back-btn { position: absolute; left: 0; font-size: 32px; color: #0b1a2e; cursor: pointer; background: none; border: none; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .deposit-header h1 { font-size: 26px; font-weight: 700; color: #139565; }
+        .instruction-box { background: #e6f3ec; border-radius: 16px; padding: 16px 18px; margin-bottom: 16px; font-size: 14px; line-height: 1.6; }
+        .instruction-box .step { display: flex; gap: 8px; margin-bottom: 2px; }
+        .instruction-box .step:last-child { margin-bottom: 0; }
+        .instruction-box .step .num { font-weight: 700; color: #139565; flex-shrink: 0; }
+        .instruction-box .step .text { color: #2a3b4f; }
+        .calc-card { background: #ffffff; border-radius: 20px; padding: 20px 18px 22px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); margin-bottom: 16px; }
+        .calc-card .calc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .calc-card .calc-header .title { font-size: 17px; font-weight: 700; color: #0b1a2e; }
+        .calc-card .calc-header .ratio { font-size: 13px; font-weight: 600; color: #139565; background: #e6f3ec; padding: 4px 14px; border-radius: 30px; }
+        .calc-card .input-group { display: flex; align-items: center; background: #f5f8fc; border-radius: 14px; border: 2px solid #eef2f5; padding: 0 16px; margin-bottom: 14px; }
+        .calc-card .input-group:focus-within { border-color: #139565; background: #fafffd; }
+        .calc-card .input-group .prefix { font-size: 16px; font-weight: 700; color: #0b1a2e; margin-right: 8px; }
+        .calc-card .input-group input { background: transparent; border: none; padding: 16px 0; font-size: 18px; font-weight: 600; width: 100%; outline: none; color: #0b1a2e; }
+        .calc-card .input-group input::placeholder { color: #aab5c7; font-weight: 400; }
+        .calc-card .est-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f2f5; }
+        .calc-card .est-row:last-of-type { border-bottom: none; }
+        .calc-card .est-row .label { font-size: 14px; color: #5e6f88; }
+        .calc-card .est-row .value { font-size: 14px; font-weight: 700; color: #0b1a2e; }
+        .calc-card .est-row .value.green { color: #139565; }
+        .chain-section { margin-top: 18px; }
+        .chain-section .chain-title { font-size: 17px; font-weight: 700; color: #0b1a2e; margin-bottom: 12px; }
+        .chain-option { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #f7f9fd; border-radius: 14px; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; margin-bottom: 10px; }
+        .chain-option:last-child { margin-bottom: 0; }
+        .chain-option:hover { background: #eef9f3; }
+        .chain-option.selected { border-color: #139565; background: #eef9f3; }
+        .chain-option .radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #d0d7e2; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .chain-option.selected .radio { border-color: #139565; }
+        .chain-option .radio .dot { width: 10px; height: 10px; border-radius: 50%; background: transparent; }
+        .chain-option.selected .radio .dot { background: #139565; }
+        .chain-option .info .name { font-size: 16px; font-weight: 700; color: #0b1a2e; }
+        .chain-option .info .sub { font-size: 13px; color: #8a9bb0; margin-top: 1px; }
+        .warning-box { background: #fef7e8; border-radius: 14px; padding: 12px 16px; font-size: 13px; color: #7a6a3a; display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .warning-box span { font-size: 18px; }
+        .deposit-btn { width: 100%; padding: 16px; border: none; border-radius: 30px; background: #139565; color: #ffffff; font-size: 20px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(19,149,101,0.25); }
+        .deposit-btn:active { transform: scale(0.97); }
+
+        .tool-header { text-align: center; padding: 6px 0 16px; }
+        .tool-header h1 { font-size: 26px; font-weight: 700; color: #0b1a2e; }
+        .wallet-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+        .wallet-item { background: #ffffff; border-radius: 16px; padding: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #139565; gap: 12px; }
+        @keyframes slideIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+        .wallet-item .left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+        .wallet-item .left .logo-container { width: 44px; height: 44px; border-radius: 12px; background: #f0f2f5; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+        .wallet-item .left .logo-container img { width: 32px; height: 32px; object-fit: contain; }
+        .wallet-item .left .logo-container .fallback { font-size: 18px; font-weight: 700; color: #139565; }
+        .wallet-item .left .info { flex: 1; min-width: 0; }
+        .wallet-item .left .info .name { font-size: 15px; font-weight: 700; color: #0b1a2e; }
+        .wallet-item .left .info .upi { font-size: 13px; color: #5e6f88; margin-top: 1px; }
+        .wallet-item .left .info .phone { font-size: 12px; color: #8a9bb0; margin-top: 1px; }
+        .wallet-item .left .info .limit { font-size: 11px; color: #8a9bb0; margin-top: 2px; }
+        .wallet-item .right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+        .wallet-item .right .status-btn { padding: 4px 14px; border: none; border-radius: 20px; font-size: 11px; font-weight: 600; cursor: pointer; background: #e6f3ec; color: #139565; }
+        .wallet-item .right .status-btn.disabled { background: #fde8e8; color: #ef3946; }
+        .wallet-item .right .delete-btn { background: none; border: none; color: #8a9bb0; font-size: 16px; cursor: pointer; padding: 2px 6px; }
+        .wallet-item .right .delete-btn:hover { color: #ef3946; }
+        .empty-state { text-align: center; padding: 60px 20px; background: #ffffff; border-radius: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+        .empty-state .icon { font-size: 48px; color: #d0d7e2; margin-bottom: 12px; }
+        .empty-state .title { font-size: 18px; font-weight: 700; color: #0b1a2e; }
+        .empty-state .desc { font-size: 14px; color: #8a9bb0; margin-top: 4px; }
+        .add-btn { width: 100%; padding: 16px; border: none; border-radius: 30px; background: #139565; color: #ffffff; font-size: 18px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(19,149,101,0.25); margin-top: 4px; }
+        .add-btn:active { transform: scale(0.97); }
+
+        .payment-content { padding: 0 0 20px; }
+        .cashback { height: 245px; margin: 0 0 15px; position: relative; overflow: hidden; border-radius: 18px; padding: 25px 30px; color: #fff; background: linear-gradient(135deg, #139b6c, #08a665); box-shadow: 0 7px 18px rgba(0,0,0,.07); }
+        .cashback h2 { position: relative; z-index: 5; font-size: 22px; font-weight: 400; margin-bottom: 5px; }
+        .cashback .percent { position: relative; z-index: 5; font-size: 45px; font-weight: 800; }
+        .cashback .percent .coupon-tag { font-size: 14px; font-weight: 600; background: rgba(255,255,255,.2); padding: 4px 12px; border-radius: 20px; display: inline-block; margin-left: 8px; vertical-align: middle; }
+        .cashback .yellow { position: absolute; width: 140px; height: 140px; right: -45px; top: -50px; border-radius: 50%; background: #f3c92d; }
+        .cashback .blue { position: absolute; width: 190px; height: 190px; right: -55px; top: 30px; border-radius: 50%; background: #4380df; }
+        .cashback .chart { position: absolute; right: 30px; top: 35px; width: 125px; height: 80px; display: flex; align-items: flex-end; gap: 5px; z-index: 4; }
+        .cashback .bar { width: 22px; background: rgba(255,255,255,.38); border-radius: 2px 2px 0 0; }
+        .bar1 { height: 20px; } .bar2 { height: 32px; } .bar3 { height: 48px; } .bar4 { height: 30px; } .bar5 { height: 55px; }
+        .cashback .balance-area { position: absolute; left: 30px; right: 30px; bottom: 22px; display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 8px; z-index: 8; }
+        .cashback .balance-box { height: 55px; padding: 7px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.12); }
+        .cashback .box-title { font-size: 11px; opacity: .9; }
+        .cashback .money { margin-top: 9px; text-align: center; font-size: 18px; font-weight: 700; }
+        .notice { padding: 14px 0; text-align: center; color: #198866; font-size: 14px; line-height: 1.35; margin-bottom: 15px; }
+        .filters { display: flex; gap: 8px; overflow-x: auto; padding: 0 0 15px; scrollbar-width: none; }
+        .filters::-webkit-scrollbar { display: none; }
+        .filter { flex-shrink: 0; padding: 9px 15px; border-radius: 25px; background: #e8ebef; color: #555; font-size: 13px; cursor: pointer; border: none; }
+        .filter.active { background: #139565; color: #fff; font-weight: bold; }
+        .filter .coupon-badge { background: #f5a623; color: #fff; font-size: 9px; padding: 2px 6px; border-radius: 10px; margin-left: 4px; }
+        .payment-card { height: 120px; position: relative; margin: 0 0 15px; padding: 18px 22px; background: #fff; border-radius: 12px; box-shadow: 0 5px 18px rgba(0,0,0,.045); border-left: 4px solid #139565; }
+        .payment-card.hidden { display: none; }
+        .payment-card .currency { color: #139565; font-size: 21px; font-weight: 800; }
+        .payment-card .amount { margin-top: 10px; color: #5e6f88; font-size: 14px; }
+        .payment-card .amount strong { color: #139565; font-size: 17px; }
+        .payment-card .income { margin-top: 7px; font-size: 14px; color: #5e6f88; }
+        .payment-card .income strong { color: #ef3946; }
+        .payment-card .code { position: absolute; top: 19px; right: 18px; color: #0b1a2e; font-size: 12px; }
+        .payment-card .code-label { display: inline-block; padding: 4px 7px; margin-right: 4px; border-radius: 6px; background: #e4f2ed; color: #139565; font-weight: bold; }
+        .payment-card .claim { position: absolute; right: 18px; bottom: 17px; border: 0; padding: 6px 15px; border-radius: 20px; background: #139565; color: #fff; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .payment-card .claim:active { transform: scale(.96); }
+        .payment-card .coupon-amount { position: absolute; right: 18px; top: 50px; font-size: 13px; color: #139565; font-weight: 700; }
+
+        .order-header { display: flex; align-items: center; justify-content: center; position: relative; padding: 6px 0 16px; }
+        .order-header .back-btn { position: absolute; left: 0; font-size: 32px; color: #0b1a2e; cursor: pointer; background: none; border: none; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .order-header h1 { font-size: 26px; font-weight: 700; color: #139565; }
+        .order-box { max-width: 420px; width: 100%; margin: 0 auto; background: #fff; border-radius: 24px; padding: 24px 20px 28px; box-shadow: 0 8px 30px rgba(0,0,0,0.06); }
+        .od-amount-box { background: linear-gradient(135deg, #139565, #08a665); border-radius: 16px; padding: 18px 20px; color: #fff; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .od-amount-box .amount { font-size: 28px; font-weight: 800; }
+        .od-amount-box .amount .curr { font-size: 18px; font-weight: 400; }
+        .od-amount-box .expire { text-align: right; }
+        .od-amount-box .expire .label { font-size: 12px; opacity: .8; }
+        .od-amount-box .expire .time { font-size: 20px; font-weight: 700; }
+        .od-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f2f5; }
+        .od-row:last-child { border-bottom: none; }
+        .od-row .label { font-size: 14px; color: #5e6f88; font-weight: 500; }
+        .od-row .value { font-size: 14px; font-weight: 600; color: #0b1a2e; text-align: right; max-width: 60%; word-break: break-word; display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+        .od-row .value .copy { width: 18px; height: 18px; position: relative; display: inline-block; cursor: pointer; flex-shrink: 0; }
+        .od-row .value .copy:before, .od-row .value .copy:after { content: ""; position: absolute; width: 11px; height: 11px; border: 2px solid #139565; border-radius: 3px; }
+        .od-row .value .copy:before { left: 0; top: 5px; }
+        .od-row .value .copy:after { left: 5px; top: 0; background: #fff; }
+        .od-row .value .cancel { background: #e6f3ec; color: #139565; border: 0; font-size: 13px; padding: 4px 14px; border-radius: 20px; cursor: pointer; font-weight: 600; }
+        .od-row .value .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #f5a623; }
+        .od-upload-area { margin-top: 17px; border: 2px dashed #139565; border-radius: 18px; padding: 20px; text-align: center; cursor: pointer; background: #fafffd; position: relative; }
+        .od-upload-area:hover { background: #eef9f3; border-color: #08a665; }
+        .od-upload-area .upload-icon { font-size: 32px; color: #139565; display: block; margin-bottom: 6px; }
+        .od-upload-area .upload-text { font-size: 16px; color: #139565; font-weight: 600; }
+        .od-upload-area .upload-sub { font-size: 13px; color: #8a9bb0; margin-top: 4px; }
+        .od-upload-area .preview-container { display: none; margin-top: 12px; position: relative; }
+        .od-upload-area .preview-container.show { display: block; }
+        .od-upload-area .preview-container img { max-width: 100%; max-height: 160px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border: 2px solid #139565; }
+        .od-upload-area .preview-container .file-name { font-size: 13px; color: #139565; font-weight: 600; margin-top: 6px; }
+        .od-upload-area .preview-container .remove-file { position: absolute; top: -8px; right: -8px; background: #ef3946; color: #fff; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .od-upload-area .upload-placeholder { display: block; }
+        .od-upload-area .upload-placeholder.hidden { display: none; }
+        .od-upload-area.has-file { border-color: #139565; background: #f0faf5; }
+        .od-next-btn { width: 100%; margin-top: 16px; padding: 14px; border-radius: 30px; border: 0; background: #139565; color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(19,149,101,0.25); }
+        .od-next-btn:active { transform: scale(.97); }
+
+        .done-box { max-width: 360px; width: 100%; margin: 60px auto 0; background: #fff; border-radius: 24px; padding: 40px 35px 30px; text-align: center; box-shadow: 0 8px 40px rgba(0,0,0,0.15); }
+        .done-box .icon { font-size: 64px; color: #139565; margin-bottom: 12px; }
+        .done-box .title { font-size: 24px; font-weight: 800; color: #0b1a2e; margin-bottom: 6px; }
+        .done-box .sub { font-size: 15px; color: #5e6f88; line-height: 1.5; margin-bottom: 20px; }
+        .done-box .btn { background: #139565; color: #fff; border: 0; padding: 14px 40px; border-radius: 30px; font-size: 18px; font-weight: 700; cursor: pointer; }
+        .done-box .btn:active { transform: scale(.95); }
+
+        .task-header { text-align: center; padding: 6px 0 16px; }
+        .task-header h1 { font-size: 26px; font-weight: 700; color: #0b1a2e; }
+        .task-sub { color: #5e6f88; font-size: 15px; text-align: center; margin-bottom: 16px; }
+        .task-tabs { display: flex; gap: 8px; margin-bottom: 16px; background: #fff; border-radius: 14px; padding: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .task-tab { flex: 1; padding: 10px 6px; text-align: center; border-radius: 10px; font-weight: 700; font-size: 13px; color: #777; cursor: pointer; background: transparent; border: none; }
+        .task-tab.active { background: #139565; color: #fff; box-shadow: 0 2px 8px rgba(19,149,101,0.25); }
+        .task-content { display: none; animation: fadeIn 0.25s ease; }
+        .task-content.active { display: block; }
+        .task-card { background: #fff; border-radius: 16px; padding: 16px 16px 18px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 4px solid #139565; }
+        .task-card .task-label { font-size: 12px; font-weight: 700; color: #139565; margin-bottom: 2px; }
+        .task-card .task-progress { font-size: 15px; font-weight: 700; color: #0b1a2e; margin-bottom: 2px; }
+        .task-card .task-desc { font-size: 13px; color: #5e6f88; line-height: 1.4; margin-bottom: 10px; }
+        .task-card .task-row { display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid #f0f2f5; }
+        .task-card .task-row .reward { font-weight: 700; color: #139565; font-size: 14px; }
+        .task-card .task-row .status-btn { font-size: 12px; font-weight: 600; padding: 5px 14px; border-radius: 20px; border: none; cursor: pointer; background: #f0f2f5; color: #777; }
+        .task-card .task-row .status-btn.done { background: #e6f3ec; color: #139565; }
+        .task-card .task-row .status-btn.primary { background: #139565; color: #fff; }
+        .task-card .task-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .task-card .task-actions .btn-outline { background: transparent; border: 1.5px solid #d0d7e2; padding: 6px 14px; border-radius: 25px; font-size: 12px; font-weight: 600; color: #5e6f88; cursor: pointer; }
+        .task-card .task-actions .btn-outline.primary { border-color: #139565; color: #139565; }
+        .task-card .task-actions .status-badge { padding: 6px 14px; border-radius: 25px; font-size: 12px; font-weight: 600; border: none; }
+        .task-card .task-actions .status-badge.unfinished { background: #fef7e8; color: #b8860b; }
+        .task-card .task-actions .status-badge.inprogress { background: #139565; color: #fff; }
+        .invite-box { background: #fff; border-radius: 16px; padding: 24px 16px 20px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .invite-box .invite-count { font-size: 40px; font-weight: 800; color: #0b1a2e; }
+        .invite-box .invite-label { color: #5e6f88; font-size: 13px; margin-top: 2px; }
+        .invite-box .invite-desc { color: #5e6f88; font-size: 13px; line-height: 1.6; margin: 10px 0 16px; text-align: left; padding: 0 4px; }
+        .invite-box .invite-btn { background: #139565; border: none; color: #fff; padding: 12px 32px; border-radius: 30px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(19,149,101,0.25); width: 100%; max-width: 180px; }
+
+        .team-header { text-align: center; padding: 6px 0 16px; }
+        .team-header h1 { font-size: 26px; font-weight: 700; color: #0b1a2e; }
+        .team-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .team-stat-box { background: #fff; border-radius: 14px; padding: 14px 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .team-stat-box .stat-label { font-size: 11px; color: #8a9bb0; font-weight: 600; }
+        .team-stat-box .stat-value { font-size: 20px; font-weight: 800; color: #0b1a2e; margin-top: 2px; }
+        .team-stat-box .stat-value.green { color: #139565; }
+        .team-stat-box .stat-value.gold { color: #d4a017; }
+        .team-stat-box.full-width { grid-column: 1 / -1; }
+        .team-section { background: #fff; border-radius: 16px; padding: 16px 16px 18px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .team-section .section-title { font-size: 15px; font-weight: 700; color: #0b1a2e; margin-bottom: 10px; }
+        .team-section .invite-link { display: flex; justify-content: space-between; align-items: center; background: #f5f8fc; border-radius: 10px; padding: 10px 14px; }
+        .team-section .invite-link .link-text { font-size: 14px; font-weight: 600; color: #0b1a2e; }
+        .team-section .invite-link .copy-icon { font-size: 18px; cursor: pointer; color: #139565; background: none; border: none; }
+        .member-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f2f5; }
+        .member-row:last-child { border-bottom: none; }
+        .member-row .level { font-weight: 700; color: #0b1a2e; font-size: 14px; }
+        .member-row .stats { display: flex; gap: 16px; font-size: 13px; color: #5e6f88; }
+        .member-row .stats span { display: flex; align-items: center; gap: 4px; }
+        .member-row .stats .num { font-weight: 600; color: #0b1a2e; }
+        .share-icons { display: flex; gap: 10px; flex-wrap: wrap; }
+        .share-icon { display: flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 25px; background: #f5f8fc; font-size: 13px; font-weight: 600; color: #0b1a2e; cursor: pointer; border: none; }
+        .share-icon:hover { background: #e8edf4; }
+        .share-icon .icon-symbol { font-size: 16px; }
+        .commission-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f2f5; }
+        .commission-row:last-child { border-bottom: none; }
+        .commission-row .level { font-weight: 700; color: #0b1a2e; font-size: 14px; }
+        .commission-row .values { font-size: 13px; color: #5e6f88; font-weight: 500; }
+        .commission-row .values .amount { color: #139565; font-weight: 700; }
+        .commission-row .view-details { color: #139565; font-weight: 600; font-size: 13px; cursor: pointer; border: none; background: none; }
+
+        .order-history-header { text-align: center; padding: 6px 0 16px; }
+        .order-history-header h1 { font-size: 26px; font-weight: 700; color: #0b1a2e; }
+        .order-tabs { display: flex; gap: 10px; margin-bottom: 16px; }
+        .order-tab { flex: 1; padding: 12px 8px; text-align: center; border-radius: 12px; font-weight: 700; font-size: 16px; color: #777; cursor: pointer; background: #fff; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .order-tab.active { background: #139565; color: #fff; box-shadow: 0 2px 10px rgba(19,149,101,0.25); }
+        .order-content { display: none; animation: fadeIn 0.25s ease; }
+        .order-content.active { display: block; }
+        .order-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .order-stat-box { background: #fff; border-radius: 14px; padding: 14px 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .order-stat-box .stat-label { font-size: 12px; color: #8a9bb0; font-weight: 600; }
+        .order-stat-box .stat-value { font-size: 22px; font-weight: 800; color: #0b1a2e; margin-top: 2px; }
+        .order-stat-box .stat-value.green { color: #139565; }
+        .order-stat-box .stat-value.gold { color: #d4a017; }
+        .currency-toggle { display: flex; gap: 10px; margin-bottom: 16px; }
+        .currency-btn { flex: 1; padding: 12px; border-radius: 12px; text-align: center; font-weight: 700; font-size: 16px; background: #fff; color: #777; border: 2px solid #eef2f6; cursor: pointer; }
+        .currency-btn.active { border-color: #139565; color: #139565; background: #eef9f3; }
+
+        .stats-header { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0 16px; }
+        .stats-header h1 { font-size: 26px; font-weight: 700; color: #139565; }
+        .stats-header .date { font-size: 14px; color: #8a9bb0; font-weight: 500; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .stat-card { background: #ffffff; border-radius: 16px; padding: 16px 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); text-align: center; }
+        .stat-card .label { font-size: 12px; color: #8a9bb0; font-weight: 600; }
+        .stat-card .value { font-size: 20px; font-weight: 700; color: #0b1a2e; margin-top: 4px; }
+        .stat-card .value.green { color: #139565; }
+        .payment-section { background: #ffffff; border-radius: 16px; padding: 18px 18px 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); margin-bottom: 16px; }
+        .payment-section .section-title { font-size: 16px; font-weight: 700; color: #0b1a2e; margin-bottom: 12px; }
+        .payment-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f2f5; }
+        .payment-row:last-child { border-bottom: none; }
+        .payment-row .label { font-size: 14px; color: #5e6f88; }
+        .payment-row .value { font-size: 14px; font-weight: 600; color: #0b1a2e; }
+        .payment-row .value.green { color: #139565; }
+        .payment-row .value.gold { color: #d4a017; }
+        .sell-btn { width: 100%; padding: 16px; border: none; border-radius: 30px; font-size: 18px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.08); margin-top: 4px; }
+        .sell-btn.closed { background: #f3c82d; color: #0b1a2e; }
+        .sell-btn.open { background: #139565; color: #ffffff; box-shadow: 0 4px 14px rgba(19,149,101,0.25); }
+
+        .my-header { text-align: center; padding: 8px 0 20px; }
+        .my-header h1 { font-size: 38px; font-weight: 700; color: #139565; }
+        .asset-card { background: #ffffff; border-radius: 20px; padding: 20px 18px 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); margin-bottom: 16px; }
+        .asset-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .asset-item { background: #eef9f3; border-radius: 14px; padding: 14px 8px 12px; text-align: center; }
+        .asset-item .icon { font-size: 28px; display: block; margin-bottom: 4px; }
+        .asset-item .label { font-size: 13px; color: #5e6f88; font-weight: 500; }
+        .asset-item .amount { font-size: 18px; font-weight: 700; color: #0b1a2e; margin-top: 2px; }
+        .asset-item .amount.green { color: #139565; }
+        .asset-item .amount.purple { color: #7c3aed; }
+        .asset-item .amount.gold { color: #d4a017; }
+        .version { text-align: right; font-size: 12px; color: #139565; font-weight: 600; margin-top: 10px; padding-right: 4px; }
+        .menu-section { background: #ffffff; border-radius: 20px; padding: 20px 16px 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .my-menu-item { text-align: center; cursor: pointer; transition: transform 0.15s; }
+        .my-menu-item:active { transform: scale(0.95); }
+        .my-menu-item .icon-box { width: 100%; aspect-ratio: 1/1; max-width: 90px; margin: 0 auto; background: #eef9f3; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #0b1a2e; }
+        .my-menu-item .label { font-size: 21px; font-weight: 700; color: #0b1a2e; margin-top: 6px; display: block; }
+        .my-menu-item.empty .icon-box { background: transparent; visibility: hidden; }
+        .logout-btn { display: block; width: 75%; max-width: 280px; margin: 0 auto; padding: 16px; border: none; border-radius: 30px; background: #139565; color: #ffffff; font-size: 24px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(19,149,101,0.25); text-align: center; }
+        .logout-btn:active { transform: scale(0.97); }
+
+        .full-page { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f5f8fc; z-index: 300; overflow-y: auto; padding: 16px 16px 30px; animation: slideUp 0.3s ease; }
+        .full-page.show { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .full-page .back-btn { background: none; border: none; font-size: 32px; color: #0b1a2e; cursor: pointer; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+        .full-page .page-title { font-size: 26px; font-weight: 700; color: #0b1a2e; margin-bottom: 16px; }
+        .add-tool-box { max-width: 420px; width: 100%; margin: 0 auto; background: #ffffff; border-radius: 24px; padding: 24px 20px 28px; box-shadow: 0 8px 30px rgba(0,0,0,0.06); }
+        .add-tool-box .at-title { font-size: 20px; font-weight: 700; color: #0b1a2e; margin-bottom: 4px; }
+        .add-tool-box .at-sub { font-size: 14px; color: #5e6f88; margin-bottom: 16px; }
+        .add-tool-box .at-tabs { display: flex; gap: 10px; margin-bottom: 16px; }
+        .add-tool-box .at-tab { flex: 1; padding: 10px; text-align: center; border-radius: 12px; font-weight: 700; font-size: 15px; background: #f0f2f5; color: #777; cursor: pointer; border: none; }
+        .add-tool-box .at-tab.active { background: #139565; color: #fff; }
+        .add-tool-box .at-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; max-height: 380px; overflow-y: auto; }
+        .add-tool-box .at-item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 14px; background: #f7f9fd; cursor: pointer; border: 2px solid transparent; }
+        .add-tool-box .at-item:hover { background: #eef9f3; }
+        .add-tool-box .at-item.selected { border-color: #139565; background: #eef9f3; }
+        .add-tool-box .at-item .logo-container { width: 44px; height: 44px; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; border: 1px solid #eef2f5; }
+        .add-tool-box .at-item .logo-container img { width: 32px; height: 32px; object-fit: contain; }
+        .add-tool-box .at-item .logo-container .fallback { font-size: 16px; font-weight: 700; color: #139565; }
+        .add-tool-box .at-item .info { flex: 1; }
+        .add-tool-box .at-item .info .name { font-size: 15px; font-weight: 700; color: #0b1a2e; }
+        .add-tool-box .at-item .info .range { font-size: 12px; color: #8a9bb0; margin-top: 2px; }
+        .add-tool-box .at-sure-btn { width: 100%; padding: 14px; border-radius: 30px; border: none; background: #139565; color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(19,149,101,0.25); }
+        .add-tool-box .at-sure-btn:active { transform: scale(0.97); }
+        .add-tool-box .at-sure-btn:disabled { background: #aab5c7; cursor: not-allowed; box-shadow: none; }
+        .wallet-box { max-width: 420px; width: 100%; margin: 0 auto; background: #ffffff; border-radius: 24px; padding: 24px 20px 28px; box-shadow: 0 8px 30px rgba(0,0,0,0.06); }
+        .wallet-box .steps { display: flex; justify-content: space-between; margin-bottom: 20px; position: relative; }
+        .wallet-box .steps:before { content: ""; position: absolute; top: 14px; left: 30px; right: 30px; height: 2px; background: #e0e5ea; z-index: 1; }
+        .wallet-box .step { display: flex; flex-direction: column; align-items: center; gap: 4px; position: relative; z-index: 2; }
+        .wallet-box .step .num { width: 28px; height: 28px; border-radius: 50%; background: #e0e5ea; color: #777; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+        .wallet-box .step .num.active { background: #139565; color: #fff; }
+        .wallet-box .step .num.done { background: #139565; color: #fff; }
+        .wallet-box .step .label { font-size: 10px; color: #8a9bb0; font-weight: 600; }
+        .wallet-box .step .label.active { color: #139565; }
+        .wallet-box .wb-title { font-size: 20px; font-weight: 700; color: #0b1a2e; margin-bottom: 4px; }
+        .wallet-box .wb-sub { font-size: 13px; color: #5e6f88; line-height: 1.5; margin-bottom: 12px; }
+        .wallet-box .wb-input-group { display: flex; align-items: center; background: #f5f8fc; border-radius: 14px; border: 2px solid #eef2f5; padding: 0 16px; margin-bottom: 16px; }
+        .wallet-box .wb-input-group:focus-within { border-color: #139565; background: #fafffd; }
+        .wallet-box .wb-input-group .prefix { font-size: 16px; font-weight: 700; color: #0b1a2e; margin-right: 8px; }
+        .wallet-box .wb-input-group input { background: transparent; border: none; padding: 16px 0; font-size: 16px; width: 100%; outline: none; color: #0b1a2e; }
+        .wallet-box .wb-input-group input::placeholder { color: #aab5c7; }
+        .wallet-box .wb-next-btn { width: 100%; padding: 14px; border-radius: 30px; border: none; background: #139565; color: #fff; font-size: 18px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(19,149,101,0.25); }
+        .wallet-box .wb-next-btn:active { transform: scale(0.97); }
+        .wallet-box .wb-next-btn:disabled { background: #aab5c7; cursor: not-allowed; box-shadow: none; }
+        .finish-content { text-align: center; padding: 10px 0; }
+        .finish-content .check-icon { font-size: 56px; color: #139565; margin-bottom: 8px; }
+        .finish-content .finish-title { font-size: 22px; font-weight: 700; color: #0b1a2e; margin-bottom: 4px; }
+        .finish-content .finish-sub { font-size: 14px; color: #5e6f88; margin-bottom: 16px; }
+        .finish-content .finish-detail { background: #eef9f3; border-radius: 14px; padding: 16px; margin: 12px 0 20px; border: 2px solid #139565; }
+        .finish-content .finish-detail .label { font-size: 12px; color: #5e6f88; }
+        .finish-content .finish-detail .value { font-size: 18px; font-weight: 700; color: #0b1a2e; margin-top: 2px; }
+        .finish-content .finish-detail .upi { font-size: 16px; font-weight: 700; color: #139565; margin-top: 2px; }
+        .finish-content .finish-detail .limit { font-size: 13px; color: #8a9bb0; margin-top: 4px; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; max-width: 430px; margin: 0 auto; height: 65px; background: #ffffff; border-top: 1px solid #eee; display: flex; align-items: center; justify-content: space-around; z-index: 20; box-shadow: 0 -4px 16px rgba(0,0,0,0.04); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #777; font-size: 10px; font-weight: 600; cursor: pointer; text-decoration: none; flex: 1; padding: 4px 0; }
+        .nav-item.active { color: #139565; }
+        .nav-icon { font-size: 22px; line-height: 24px; }
+        .nav-item .wallet-icon { width: 48px; height: 48px; border-radius: 50%; background: #f3c82d; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #0b1a2e; margin-top: -22px; box-shadow: 0 4px 14px rgba(0,0,0,0.10); }
+    </style>
+</head>
+<body>
+
+<div class="app">
+
+    <!-- AUTH -->
+    <div id="authContainer">
+        <div class="auth-page">
+            <div class="auth-header" id="loginHeader"><h1>LgPay</h1></div>
+            <div class="auth-header" id="registerHeader" style="display:none;position:relative">
+                <button class="auth-back" onclick="showLogin()">&#8249;</button>
+                <h1>Register</h1>
+            </div>
+            <div class="login-box" id="loginBox">
+                <img class="auth-logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/LG_Pay_app.png/250px-LG_Pay_app.png" alt="LgPay">
+                <div class="auth-logo-name">LgPay</div>
+                <div class="auth-input"><span>&#9689;</span><input type="text" placeholder="Phone" id="loginPhone"></div>
+                <div class="auth-input"><span>&#9817;</span><input type="password" placeholder="Password" id="loginPassword"></div>
+                <div class="auth-options">
+                    <button onclick="showRegister()">Register</button>
+                    <label class="auth-remember"><input type="checkbox"> Remember Me</label>
+                </div>
+                <div class="auth-agree"><input type="checkbox" checked> Agree User Privacy Agreement</div>
+                <button class="auth-btn" onclick="handleLogin()">Sign In</button>
+                <button class="auth-forgot" onclick="alert('Reset password link sent')">Forget Password</button>
+            </div>
+            <div class="register-box" id="registerBox">
+                <div class="auth-input"><span>&#9678;</span><input type="text" placeholder="User Name" id="regName"></div>
+                <div class="auth-input"><span>&#9817;</span><input type="password" placeholder="Password" id="regPassword"></div>
+                <div class="auth-input"><span>&#9742;</span><div class="phone-group"><div class="country-code">+91</div><input type="tel" placeholder="Phone" id="regPhone"></div></div>
+                <div class="auth-input"><span>&#128279;</span><input type="text" placeholder="Invite Code" id="regInvite"></div>
+                <button class="auth-btn" onclick="handleRegister()">Sign Up</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="mainApp" style="display:none;">
+
+        <!-- HOME -->
+        <div class="page active" id="page-home">
+            <div class="header">
+                <div class="profile">
+                    <div class="avatar"></div>
+                    <div>
+                        <div class="username" id="displayName">Sonu8373</div>
+                        <div class="id">ID : 252600 <span class="copy" onclick="copyID()">&#8680;</span></div>
+                    </div>
+                </div>
+                <div class="bell">&#9827;</div>
+            </div>
+            <div class="balance">
+                <div class="balance-title">Available Balance</div>
+                <div class="amount">&#8377;350</div>
+                <button class="detail" onclick="alert('LGPay Balance: ₹350')">Detail</button>
+            </div>
+            <div class="stats">
+                <div class="stat"><div class="arrow up">&#8593;</div><div class="stat-title">Deposit</div><div class="stat-value">&#8377; 0</div></div>
+                <div class="stat"><div class="arrow down">&#8595;</div><div class="stat-title">Withdrawal</div><div class="stat-value">&#8377; 0</div></div>
+            </div>
+            <div class="menu">
+                <div class="menu-item" onclick="switchPage('deposit')"><div class="badge">110INR</div><div class="icon">&#165;</div><div class="label">USDT</div></div>
+                <div class="menu-item" onclick="switchPage('task')"><div class="icon">&#9783;</div><div class="label">Task</div></div>
+                <div class="menu-item" onclick="switchPage('team')"><div class="icon">&#9817;</div><div class="label">Team</div></div>
+                <div class="menu-item" onclick="switchPage('order')"><div class="icon">&#9635;</div><div class="label">Order</div></div>
+            </div>
+            <div class="newcomer">
+                <div class="multi">Multi-Day Task</div>
+                <div class="new-title">NEWCOMER REWARDS</div>
+                <div class="not-started">Not started</div>
+                <div class="new-text">You need to complete at least one order to start.</div>
+            </div>
+            <div class="transactions">
+                <div class="trans-head">
+                    <div class="trans-title">Transactions</div>
+                    <div class="see" onclick="alert('No transactions yet')">See All</div>
+                </div>
+                <div class="empty">
+                    <div class="empty-title">No top-up orders yet</div>
+                    <div class="empty-text">Top up now and start the game!</div>
+                    <button class="topup" onclick="switchPage('deposit')">Top up now</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DEPOSIT -->
+        <div class="page" id="page-deposit">
+            <div class="deposit-header">
+                <button class="back-btn" onclick="switchPage('home')">&#8592;</button>
+                <h1>Deposit</h1>
+            </div>
+            <div class="instruction-box">
+                <div class="step"><span class="num">1.</span><span class="text">Please enter the amount of USDT you would like to use to recharge your integrals.</span></div>
+                <div class="step"><span class="num">2.</span><span class="text">Then click the 'Deposit' button at the bottom.</span></div>
+                <div class="step"><span class="num">3.</span><span class="text">Follow the payment instructions on the order page to complete the payment.</span></div>
+            </div>
+            <div class="calc-card">
+                <div class="calc-header"><span class="title">Calculator</span><span class="ratio">Ratio: 1 USDT = 109 INR</span></div>
+                <div class="input-group"><span class="prefix">USDT</span><input type="number" id="usdtInput" placeholder="Please Enter A Number" value="0.00" step="0.01" min="0"></div>
+                <div class="est-row"><span class="label">Estimated bonus:</span><span class="value green" id="bonusDisplay">0.00 Score</span></div>
+                <div class="est-row"><span class="label">You will receive:</span><span class="value green" id="receiveDisplay">0.00 Score</span></div>
+                <div class="chain-section">
+                    <div class="chain-title">Select Chain Type</div>
+                    <div class="chain-option selected" data-chain="TRC20" onclick="selectChain(this)"><div class="radio"><div class="dot"></div></div><div class="info"><div class="name">TRC20</div><div class="sub">USDT-TRON Network</div></div></div>
+                    <div class="chain-option" data-chain="BSC" onclick="selectChain(this)"><div class="radio"><div class="dot"></div></div><div class="info"><div class="name">BSC(BEP20)</div><div class="sub">USDT-BNB Smart Chain</div></div></div>
+                </div>
+            </div>
+            <div class="warning-box"><span>&#9888;</span> After the recharge is completed, please wait 3-5 minutes for the deposit to arrive.</div>
+            <button class="deposit-btn" onclick="handleDeposit()">Deposit</button>
+        </div>
+
+        <!-- TOOL -->
+        <div class="page" id="page-tool">
+            <div class="tool-header"><h1>Tool</h1></div>
+            <div class="wallet-list" id="walletList"></div>
+            <button class="add-btn" id="addBtn">+ Add</button>
+        </div>
+
+        <!-- PAYMENT -->
+        <div class="page" id="page-payment">
+            <div class="header"><h1 style="color:#139565;font-size:25px;font-weight:700;text-align:center;width:100%;padding-top:10px;">Payment</h1></div>
+            <div class="payment-content">
+                <div class="cashback">
+                    <div class="yellow"></div><div class="blue"></div>
+                    <h2>Cashback</h2>
+                    <div class="percent">5%<span class="coupon-tag">&#8377;100 Coupon</span></div>
+                    <div class="chart"><div class="bar bar1"></div><div class="bar bar2"></div><div class="bar bar3"></div><div class="bar bar4"></div><div class="bar bar5"></div></div>
+                    <div class="balance-area">
+                        <div class="balance-box"><div class="box-title">Balance</div><div class="money">&#8377;350</div></div>
+                        <div class="balance-box"><div class="box-title">Reward</div><div class="money">&#8377;0</div></div>
+                        <div class="balance-box"><div class="box-title">Pending</div><div class="money">&#8377;0</div></div>
+                    </div>
+                </div>
+                <div class="notice">&#9888; Please use Freecharge or Mobikwik or Paytm wallet for payment!</div>
+                <div class="filters">
+                    <button class="filter active" data-filter="all" onclick="applyFilter('all')">Top Picks</button>
+                    <button class="filter" data-filter="200" onclick="applyFilter('200')">&#8377;200+ <span class="coupon-badge">&#8377;100</span></button>
+                    <button class="filter" data-filter="500" onclick="applyFilter('500')">&#8377;500+ <span class="coupon-badge">&#8377;150</span></button>
+                    <button class="filter" data-filter="1000" onclick="applyFilter('1000')">&#8377;1000+ <span class="coupon-badge">&#8377;250</span></button>
+                    <button class="filter" data-filter="5000" onclick="applyFilter('5000')">&#8377;5000+ <span class="coupon-badge">&#8377;500</span></button>
+                </div>
+                <div id="paymentCardsContainer">
+                    <div class="payment-card" data-amount="200"><div class="currency">INR</div><div class="code"><span class="code-label">Code</span> dC7zqZ</div><div class="amount">Amount: <strong>&#8377;200</strong></div><div class="income">Income: <strong>+10.0</strong></div><div class="coupon-amount">&#8377;100 Coupon</div><button class="claim" onclick="handleClaim(this,'dC7zqZ','200','10.0','100')">Claim</button></div>
+                    <div class="payment-card" data-amount="500"><div class="currency">INR</div><div class="code"><span class="code-label">Code</span> GeUFnz</div><div class="amount">Amount: <strong>&#8377;500</strong></div><div class="income">Income: <strong>+25.0</strong></div><div class="coupon-amount">&#8377;150 Coupon</div><button class="claim" onclick="handleClaim(this,'GeUFnz','500','25.0','150')">Claim</button></div>
+                    <div class="payment-card" data-amount="1000"><div class="currency">INR</div><div class="code"><span class="code-label">Code</span> gVLvYx</div><div class="amount">Amount: <strong>&#8377;1000</strong></div><div class="income">Income: <strong>+50.0</strong></div><div class="coupon-amount">&#8377;250 Coupon</div><button class="claim" onclick="handleClaim(this,'gVLvYx','1000','50.0','250')">Claim</button></div>
+                    <div class="payment-card" data-amount="2000"><div class="currency">INR</div><div class="code"><span class="code-label">Code</span> kP82Lm</div><div class="amount">Amount: <strong>&#8377;2000</strong></div><div class="income">Income: <strong>+100.0</strong></div><div class="coupon-amount">&#8377;350 Coupon</div><button class="claim" onclick="handleClaim(this,'kP82Lm','2000','100.0','350')">Claim</button></div>
+                    <div class="payment-card" data-amount="300"><div class="currency">INR</div><div class="code"><span class="code-label">Code</span> aB3cD4</div><div class="amount">Amount: <strong>&#8377;300</strong></div><div class="income">Income: <strong>+15.0</strong></div><div class="coupon-amount">&#8377;100 Coupon</div><button class="claim" onclick="handleClaim(this,'aB3cD4','300','15.0','100')">Claim</button></div>
+                    <div class="payment-card" data-amount="800"><div class="currency">INR</div><div class="code"><span class="code-label">Code</span> mN7pQr</div><div class="amount">Amount: <strong>&#8377;800</strong></div><div class="income">Income: <strong>+40.0</strong></div><div class="coupon-amount">&#8377;150 Coupon</div><button class="claim" onclick="handleClaim(this,'mN7pQr','800','40.0','150')">Claim</button></div>
+                    <div class="payment-card" data-amount="3000"><div class="currency">INR</div><div class="code"><span class="code-label">Code</span> zX9vBn</div><div class="amount">Amount: <strong>&#8377;3000</strong></div><div class="income">Income: <strong>+150.0</strong></div><div class="coupon-amount">&#8377;350 Coupon</div><button class="claim" onclick="handleClaim(this,'zX9vBn','3000','150.0','350')">Claim</button></div>
+                    <div class="payment-card" data-amount="5000"><div class="currency">INR</div><div class="code"><span class="code-label">Code</span> xY9mNp</div><div class="amount">Amount: <strong>&#8377;5000</strong></div><div class="income">Income: <strong>+250.0</strong></div><div class="coupon-amount">&#8377;500 Coupon</div><button class="claim" onclick="handleClaim(this,'xY9mNp','5000','250.0','500')">Claim</button></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ORDER -->
+        <div class="page" id="page-order">
+            <div class="order-header">
+                <button class="back-btn" onclick="switchPage('home')">&#8592;</button>
+                <h1>Order</h1>
+            </div>
+            <div class="order-box">
+                <div class="od-amount-box">
+                    <div class="amount"><span class="curr">INR</span> <span id="orderAmount">285.00</span></div>
+                    <div class="expire"><div class="label">Expire:</div><div class="time" id="orderTimer">6:55</div></div>
+                </div>
+                <div class="od-row" style="border-top:2px solid #139565;padding-top:12px;margin-top:4px;"><span class="label" style="font-weight:700;color:#139565;">Payout Wallet:</span><span class="value"><b>Paytm Business</b></span></div>
+                <div class="od-row"><span class="label">Payout Account:</span><span class="value">033325224493100 <span class="copy" onclick="copyText('033325224493100')"></span></span></div>
+                <div class="od-row"><span class="label">IFSC:</span><span class="value">NESF0000333 <span class="copy" onclick="copyText('NESF0000333')"></span></span></div>
+                <div class="od-row"><span class="label">Payout UPI:</span><span class="value">sonu9970@ptyes <span class="copy" onclick="copyText('sonu9970@ptyes')"></span></span></div>
+                <div class="od-row"><span class="label">Status:</span><span class="value"><span class="status-dot"></span> Pending <button class="cancel" onclick="alert('Order cancellation requested')">Cancel</button></span></div>
+                <div class="od-row" style="border-bottom:none"><span class="label">NO:</span><span class="value" style="font-size:13px;color:#8a9bb0;font-weight:500">R2026081516255583399786 <span class="copy" onclick="copyText('R2026081516255583399786')"></span></span></div>
+                <div class="od-upload-area" id="orderUploadArea" onclick="document.getElementById('orderVoucher').click()">
+                    <div class="upload-placeholder" id="orderPlaceholder">
+                        <div class="upload-icon">&#8962;</div>
+                        <div class="upload-text">Upload Voucher</div>
+                        <div class="upload-sub">Click to upload image or PDF</div>
+                    </div>
+                    <div class="preview-container" id="orderPreview">
+                        <img id="orderPreviewImg" src="">
+                        <div class="file-name" id="orderFileName">file.jpg</div>
+                        <button class="remove-file" onclick="removeOrderFile(event)">&#10005;</button>
+                    </div>
+                    <input id="orderVoucher" type="file" accept="image/*,.pdf" hidden onchange="uploadOrderFile(this)">
+                </div>
+                <button class="od-next-btn" onclick="goToNext()">Next</button>
+            </div>
+        </div>
+
+        <!-- DONE -->
+        <div class="page" id="page-done">
+            <div class="done-box">
+                <div class="icon">&#10003;</div>
+                <div class="title">Done</div>
+                <div class="sub" id="doneSub">Order confirmed successfully!<br>Amount: INR 285.00</div>
+                <button class="btn" onclick="closeDone()">OK</button>
+            </div>
+        </div>
+
+        <!-- TASK -->
+        <div class="page" id="page-task">
+            <div class="task-header"><h1>Task Rewards</h1></div>
+            <div class="task-sub">Earn tokens by completing tasks</div>
+            <div class="task-tabs">
+                <button class="task-tab active" onclick="switchTaskTab('newbie')">Newbie Tasks</button>
+                <button class="task-tab" onclick="switchTaskTab('team')">Team Growth</button>
+                <button class="task-tab" onclick="switchTaskTab('daily')">Daily Tasks</button>
+            </div>
+            <div class="task-content active" id="task-newbie">
+                <div class="task-card"><div class="task-label">NEWBIE · 0 / 500</div><div class="task-progress">New Member Tasks</div><div class="task-desc">Register and start trading. Once your total trading amount reaches 500.</div><div class="task-row"><span class="reward">&#9679; 20</span><button class="status-btn">Not Started</button></div></div>
+                <div class="task-card"><div class="task-label">NEWBIE · 0 / 1</div><div class="task-progress">Bind Wallet Type Paytm Business Reward</div><div class="task-desc">You can get rewards by binding your Paytm Business wallet.</div><div class="task-row"><span class="reward">&#9679; 20</span><button class="status-btn primary" onclick="alert('Go to Bind Paytm')">Go to Bind</button></div></div>
+                <div class="task-card"><div class="task-label">NEWBIE · 0 / 1</div><div class="task-progress">Bind Wallet Type Mobikwik Reward</div><div class="task-desc">You can get rewards by binding your Mobikwik wallet.</div><div class="task-row"><span class="reward">&#9679; 20</span><button class="status-btn primary" onclick="alert('Go to Bind Mobikwik')">Go to Bind</button></div></div>
+                <div class="task-card"><div class="task-label">NEWBIE · 0 / 1</div><div class="task-progress">Bind Wallet Type Freecharge Reward</div><div class="task-desc">You can get rewards by binding your Freecharge wallet.</div><div class="task-row"><span class="reward">&#9679; 20</span><button class="status-btn primary" onclick="alert('Go to Bind Freecharge')">Go to Bind</button></div></div>
+                <div class="task-card"><div class="task-label">NEWBIE · 1 / 1 &#10003;</div><div class="task-progress">Join Telegram Channel Reward</div><div class="task-desc">Bind Telegram account and join our Telegram channel.</div><div class="task-row"><span class="reward">&#9679; 20</span><button class="status-btn done" onclick="alert('Already completed!')">&#10003; Done</button></div></div>
+            </div>
+            <div class="task-content" id="task-team">
+                <div class="invite-box"><div class="invite-count">0</div><div class="invite-label">invited</div><div class="invite-desc">Invite friends to join LGPay. When a referred user completes &#8377;10000 in total trading volume, you will receive a &#8377;300 bonus. No limit on the number of referrals.</div><button class="invite-btn" onclick="alert('Invite friends to LGPay!')">Invite</button></div>
+            </div>
+            <div class="task-content" id="task-daily">
+                <div class="task-card"><div class="task-label">YESTERDAY · 0 / 20000</div><div class="task-progress">Earn Up To &#8377;600 Daily 2026-08-13</div><div class="task-desc">Complete payment tasks daily and earn extra bonuses. The higher your daily transaction volume, the more rewards you can claim the next day.</div><div class="task-actions"><span class="status-badge unfinished">Unfinished</span><button class="btn-outline primary" onclick="alert('Task Rules')">Check Task Rules</button></div></div>
+                <div class="task-card"><div class="task-label">TODAY · 0 / 20000</div><div class="task-progress">Earn Up To &#8377;600 Daily 2026-08-14</div><div class="task-desc">Complete payment tasks daily and earn extra bonuses. The higher your daily transaction volume, the more rewards you can claim the next day.</div><div class="task-actions"><span class="status-badge inprogress">In Progress</span><button class="btn-outline primary" onclick="alert('Task Rules')">Check Task Rules</button></div></div>
+            </div>
+        </div>
+
+        <!-- TEAM -->
+        <div class="page" id="page-team">
+            <div class="team-header"><h1>Team</h1></div>
+            <div class="team-stats">
+                <div class="team-stat-box"><div class="stat-label">My Total Commissions:</div><div class="stat-value green">+0.00</div></div>
+                <div class="team-stat-box"><div class="stat-label">Commissions Yesterday</div><div class="stat-value">+0.00</div></div>
+                <div class="team-stat-box"><div class="stat-label">Total Team Members</div><div class="stat-value gold">+0</div></div>
+                <div class="team-stat-box"><div class="stat-label">Commissions Today</div><div class="stat-value">+0.00</div></div>
+                <div class="team-stat-box full-width"><div class="stat-label">Total Team Deposit</div><div class="stat-value green">+0.00</div></div>
+            </div>
+            <div class="team-section"><div class="section-title">Invitation</div><div class="invite-link"><span class="link-text">cN0kyr</span><button class="copy-icon" onclick="copyLink()">&#8680;</button></div></div>
+            <div class="team-section"><div class="section-title">New Team Members:</div><div class="member-row"><span class="level">Level.B</span><div class="stats"><span>Today: <span class="num">0</span></span><span>Yesterday: <span class="num">0</span></span></div></div><div class="member-row"><span class="level">Level.C</span><div class="stats"><span>Today: <span class="num">0</span></span><span>Yesterday: <span class="num">0</span></span></div></div></div>
+            <div class="team-section"><div class="section-title">Share APP to</div><div class="share-icons"><button class="share-icon" onclick="shareTo('Telegram')"><span class="icon-symbol">&#9992;</span> Telegram</button><button class="share-icon" onclick="shareTo('Facebook')"><span class="icon-symbol">f</span> Facebook</button><button class="share-icon" onclick="shareTo('WhatsApp')"><span class="icon-symbol">&#9990;</span> Whatsapp</button><button class="share-icon" onclick="copyLink()"><span class="icon-symbol">&#8680;</span> Copy link</button></div></div>
+            <div class="team-section"><div class="section-title">Commissions / Deposit</div><div class="commission-row"><span class="level">Level.B</span><span class="values"><span class="amount">0.00</span>/0.00</span></div><div class="commission-row"><span class="level">Level.C</span><span class="values"><span class="amount">0.00</span>/0.00</span></div><div class="commission-row" style="border-bottom:none;padding-bottom:2px;"><span></span><button class="view-details" onclick="alert('View details')">View details &gt;</button></div></div>
+        </div>
+
+        <!-- ORDER HISTORY -->
+        <div class="page" id="page-orderhistory">
+            <div class="order-history-header"><h1>Payment History</h1></div>
+            <div class="order-tabs"><button class="order-tab active" onclick="switchOrderTab('receive')">Receive</button><button class="order-tab" onclick="switchOrderTab('purchase')">Purchase</button></div>
+            <div class="order-content active" id="order-receive">
+                <div class="order-stats"><div class="order-stat-box"><div class="stat-label">Balance</div><div class="stat-value green">350</div></div><div class="order-stat-box"><div class="stat-label">Reward</div><div class="stat-value gold">10</div></div><div class="order-stat-box"><div class="stat-label">Pendings</div><div class="stat-value">0</div></div></div>
+                <div class="currency-toggle"><button class="currency-btn active" onclick="switchCurrency(this,'INR')">INR</button><button class="currency-btn" onclick="switchCurrency(this,'USDT')">USDT</button></div>
+                <div class="empty-state"><div class="icon">&#8212;</div><div class="title">No more data</div><div class="desc">No receive transactions yet</div></div>
+            </div>
+            <div class="order-content" id="order-purchase">
+                <div class="order-stats"><div class="order-stat-box"><div class="stat-label">Balance</div><div class="stat-value green">350</div></div><div class="order-stat-box"><div class="stat-label">Reward</div><div class="stat-value gold">10</div></div><div class="order-stat-box"><div class="stat-label">Pendings</div><div class="stat-value">0</div></div></div>
+                <div class="currency-toggle"><button class="currency-btn active" onclick="switchCurrency(this,'INR')">INR</button><button class="currency-btn" onclick="switchCurrency(this,'USDT')">USDT</button></div>
+                <div class="empty-state"><div class="icon">&#8212;</div><div class="title">No more data</div><div class="desc">No purchase transactions yet</div></div>
+            </div>
+        </div>
+
+        <!-- STATISTICS -->
+        <div class="page" id="page-statistics">
+            <div class="stats-header"><h1>Statistics</h1><span class="date">(26/08/2026)</span></div>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="label">Balance</div><div class="value green">&#8377; 350.00</div></div>
+                <div class="stat-card"><div class="label">Sell</div><div class="value">&#8377; 0.00</div></div>
+                <div class="stat-card"><div class="label">Deposit</div><div class="value">&#8377; 0.00</div></div>
+                <div class="stat-card"><div class="label">Commission</div><div class="value">&#8377; 0.00</div></div>
+            </div>
+            <div class="payment-section">
+                <div class="section-title">Payment</div>
+                <div class="payment-row"><span class="label">Real Time Exchange Rates(INR/USDT)</span><span class="value">104.5</span></div>
+                <div class="payment-row"><span class="label">In Process Amount</span><span class="value">&#8377; 0.00</span></div>
+                <div class="payment-row"><span class="label">In Process Orders</span><span class="value">0</span></div>
+                <div class="payment-row"><span class="label">Commission Rate</span><span class="value gold">5 %</span></div>
+                <div class="payment-row"><span class="label">Estimated Income</span><span class="value green">&#8377; 0.00</span></div>
+            </div>
+            <button class="sell-btn closed" id="sellBtn" onclick="toggleSell()">Closed Selling</button>
+        </div>
+
+        <!-- MY ASSET -->
+        <div class="page" id="page-my">
+            <div class="my-header"><h1>My Asset</h1></div>
+            <div class="asset-card">
+                <div class="asset-grid">
+                    <div class="asset-item"><span class="icon">&#128179;</span><div class="label">Deposit</div><div class="amount green">&#8377; 0</div></div>
+                    <div class="asset-item"><span class="icon">&#128184;</span><div class="label">Withdraw</div><div class="amount purple">&#8377; 0</div></div>
+                    <div class="asset-item"><span class="icon">&#127991;</span><div class="label">Commission</div><div class="amount gold">&#8377; 0</div></div>
+                </div>
+                <div class="version">v1.1.2</div>
+            </div>
+            <div class="menu-section">
+                <div class="menu-grid">
+                    <div class="my-menu-item" onclick="alert('Wallet')"><div class="icon-box">&#165;</div><span class="label">Wallet</span></div>
+                    <div class="my-menu-item" onclick="alert('Integral')"><div class="icon-box">&#8862;</div><span class="label">Integral</span></div>
+                    <div class="my-menu-item" onclick="alert('Service')"><div class="icon-box">&#127911;</div><span class="label">Service</span></div>
+                    <div class="my-menu-item" onclick="alert('Message')"><div class="icon-box">&#128172;</div><span class="label">Message</span></div>
+                    <div class="my-menu-item" onclick="alert('Pin')"><div class="icon-box">&#128274;</div><span class="label">Pin</span></div>
+                    <div class="my-menu-item empty"><div class="icon-box"></div><span class="label"></span></div>
+                </div>
+            </div>
+            <button class="logout-btn" onclick="handleLogout()">Logout</button>
+        </div>
+
+        <!-- ADD TOOL FULL PAGE -->
+        <div class="full-page" id="addToolPage">
+            <button class="back-btn" onclick="closeFullPage('addToolPage')">&#8592;</button>
+            <div class="page-title">Add Tool</div>
+            <div class="add-tool-box">
+                <div class="at-title">Choose your payment</div>
+                <div class="at-sub">Select a payment service</div>
+                <div class="at-tabs">
+                    <button class="at-tab active" onclick="switchTab('personal')">Personal</button>
+                    <button class="at-tab" onclick="switchTab('business')">Business</button>
+                </div>
+                <div class="at-list" id="toolList"></div>
+                <button class="at-sure-btn" id="sureBtn" disabled onclick="handleSure()">Sure</button>
+            </div>
+        </div>
+
+        <!-- WALLET CREATE FULL PAGE -->
+        <div class="full-page" id="walletCreatePage">
+            <button class="back-btn" onclick="closeFullPage('walletCreatePage')">&#8592;</button>
+            <div class="page-title">Wallet</div>
+            <div class="wallet-box">
+                <div class="steps">
+                    <div class="step"><div class="num active" id="step1Num">1</div><div class="label active" id="step1Label">Phone</div></div>
+                    <div class="step"><div class="num" id="step2Num">2</div><div class="label" id="step2Label">Authorize</div></div>
+                    <div class="step"><div class="num" id="step3Num">3</div><div class="label" id="step3Label">Finish</div></div>
+                </div>
+                <div id="step1Content">
+                    <div class="wb-title" id="createTitle">Create Wallet</div>
+                    <div class="wb-sub" id="createSub">Please complete the form below based on your wallet information.</div>
+                    <div class="wb-input-group"><span class="prefix">+91</span><input type="tel" id="phoneInput" placeholder="Enter phone number" maxlength="10"></div>
+                    <button class="wb-next-btn" onclick="goToStep2()">Next</button>
+                </div>
+                <div id="step2Content" style="display:none;">
+                    <div class="wb-title">Authorize</div>
+                    <div class="wb-sub">Your UPI ID has been generated. Click "Next" to finish.</div>
+                    <div style="background:#eef9f3;border-radius:14px;padding:16px;margin-bottom:16px;border:2px solid #139565;">
+                        <div style="font-size:12px;color:#5e6f88;">Your UPI ID</div>
+                        <div style="font-size:18px;font-weight:700;color:#0b1a2e;margin-top:2px;" id="generatedUPI">-</div>
+                        <div style="font-size:13px;color:#139565;font-weight:600;margin-top:2px;">&#10003; Enabled</div>
+                    </div>
+                    <div style="background:#f7f9fd;border-radius:14px;padding:14px 16px;margin-bottom:16px;">
+                        <div style="font-size:13px;color:#5e6f88;">Platform: <span style="font-weight:700;color:#0b1a2e;" id="genPlatform">-</span></div>
+                        <div style="font-size:13px;color:#5e6f88;margin-top:2px;">Phone: <span style="font-weight:700;color:#0b1a2e;" id="genPhone">-</span></div>
+                    </div>
+                    <button class="wb-next-btn" onclick="goToStep3()">Next</button>
+                </div>
+                <div id="step3Content" style="display:none;">
+                    <div class="finish-content">
+                        <div class="check-icon">&#10003;</div>
+                        <div class="finish-title" id="finishTitle">Wallet</div>
+                        <div class="finish-sub">Wallet Enabled</div>
+                        <div class="finish-detail">
+                            <div class="label">Phone Number</div>
+                            <div class="value" id="finishPhone">-</div>
+                            <div class="label" style="margin-top:8px;">UPI ID</div>
+                            <div class="upi" id="finishUPI">-</div>
+                            <div class="limit">LimitedRange: 10.00 ~ 100000.00</div>
+                        </div>
+                        <button class="wb-next-btn" onclick="finishWallet()">Finish</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM NAV -->
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="switchPage('home')"><div class="nav-icon">&#8962;</div><span>Home</span></div>
+            <div class="nav-item" onclick="switchPage('payment')"><div class="nav-icon">&#9646;</div><span>Payment</span></div>
+            <div class="nav-item" onclick="switchPage('tool')"><div class="wallet-icon">$</div></div>
+            <div class="nav-item" onclick="switchPage('statistics')"><div class="nav-icon">&#9823;</div><span>Statistics</span></div>
+            <div class="nav-item" onclick="switchPage('my')"><div class="nav-icon">&#9679;</div><span>My</span></div>
+        </div>
+
+    </div><!-- end mainApp -->
+</div><!-- end app -->
+
+<script>
+    function showRegister() {
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('loginHeader').style.display = 'none';
+        document.getElementById('registerBox').style.display = 'block';
+        document.getElementById('registerHeader').style.display = 'flex';
+    }
+    function showLogin() {
+        document.getElementById('registerBox').style.display = 'none';
+        document.getElementById('registerHeader').style.display = 'none';
+        document.getElementById('loginBox').style.display = 'block';
+        document.getElementById('loginHeader').style.display = 'flex';
+    }
+    function handleLogin() {
+        var phone = document.getElementById('loginPhone').value.trim();
+        var pass = document.getElementById('loginPassword').value.trim();
+        if (!phone || !pass) { alert('Enter phone and password'); return; }
+        document.getElementById('authContainer').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        document.getElementById('displayName').textContent = phone;
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        document.querySelectorAll('.nav-item')[0].classList.add('active');
+    }
+    function handleRegister() {
+        var name = document.getElementById('regName').value.trim();
+        var pass = document.getElementById('regPassword').value.trim();
+        var phone = document.getElementById('regPhone').value.trim();
+        if (!name || !pass || !phone) { alert('Fill all fields'); return; }
+        alert('Registration successful! Please login.');
+        showLogin();
+    }
+    function handleLogout() {
+        if (confirm('Logout?')) {
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('authContainer').style.display = 'block';
+            document.getElementById('loginPhone').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+    }
+
+    function switchPage(page) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        var target = document.getElementById('page-' + page);
+        if (target) target.classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        var map = { home:0, payment:1, tool:2, statistics:3, my:4, deposit:0, task:0, team:0, order:0, orderhistory:0 };
+        if (page in map) {
+            var navItems = document.querySelectorAll('.nav-item');
+            if (navItems[map[page]]) navItems[map[page]].classList.add('active');
+        }
+    }
+
+    const usdtInput = document.getElementById('usdtInput');
+    const bonusDisplay = document.getElementById('bonusDisplay');
+    const receiveDisplay = document.getElementById('receiveDisplay');
+    let selectedChain = 'TRC20';
+    const RATIO = 109;
+
+    function updateEstimate() {
+        let raw = usdtInput.value.trim();
+        if (raw === '') raw = '0';
+        let usdt = parseFloat(raw);
+        if (isNaN(usdt) || usdt < 0) usdt = 0;
+        const formatted = (usdt * RATIO).toFixed(2);
+        bonusDisplay.textContent = formatted + ' Score';
+        receiveDisplay.textContent = formatted + ' Score';
+    }
+    function selectChain(el) {
+        document.querySelectorAll('.chain-option').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedChain = el.dataset.chain || 'TRC20';
+    }
+    function handleDeposit() {
+        let usdt = parseFloat(usdtInput.value.trim());
+        if (isNaN(usdt) || usdt <= 0) { alert('Please enter a valid USDT amount (greater than 0).'); return; }
+        const chainName = selectedChain === 'TRC20' ? 'TRC20 (USDT-TRON)' : 'BSC (BEP20)';
+        alert('Deposit Request\n\nUSDT: ' + usdt.toFixed(2) + '\nScore: ' + (usdt * RATIO).toFixed(2) + ' Score\nChain: ' + chainName + '\n\nFollow payment instructions on the order page.');
+    }
+    usdtInput.addEventListener('input', updateEstimate);
+    usdtInput.addEventListener('blur', function() { if (this.value.trim() === '') this.value = '0.00'; updateEstimate(); });
+    usdtInput.value = '0.00';
+    updateEstimate();
+
+    const STORAGE_KEY = 'lgpay_wallets';
+    let wallets = [];
+    let selectedTool = null;
+    let currentTab = 'personal';
+    let createData = {};
+    const LOGOS = {
+        'Freecharge': 'https://play-lh.googleusercontent.com/e5Y4ftiOjuk-WWQiDfof8HEk3UvqmqYUuKpJqszr6vEgyIg0H4Z-r47GV6fTSC339hgzPuz9Waa0Ir5Lxuqa_A',
+        'Mobikwik': 'https://s3-symbol-logo.tradingview.com/one-mobikwik-systems-limited--600.png',
+        'IndusPay': 'https://play-lh.googleusercontent.com/5CWr-hYR57D7-5s51SsPlm69to3NE5poC5ChdxWjSq31cevVW7Oo-U9yhX7mUIcFdF5FQNFFdD0N4MYubUZh3A=s256-rw',
+        'BharatpeBiz': 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS960jTpuj9uCYOvAaTjWKdK7e62YFVa3EjpCgzqoFNH7muWfGVxPqXcW&s=10',
+        'Paytm': 'https://bfsi.eletsonline.com/wp-content/uploads/2016/05/Paytm-Logo.png',
+        'Paytm Business': 'https://bfsi.eletsonline.com/wp-content/uploads/2016/05/Paytm-Logo.png'
+    };
+    const SUFFIXES = { 'Freecharge':'@freecharge','Mobikwik':'@ikwik','IndusPay':'@indus','BharatpeBiz':'@bharatpe','Paytm':'@ptyes','Paytm Business':'@ptyes' };
+    const RANGES = { 'Freecharge':'Payout','Mobikwik':'Payin 10.00 - 100000.00','IndusPay':'Payin 10.00 - 100000.00','BharatpeBiz':'Payin 10.00 - 100000.00','Paytm':'Payin 10.00 - 100000.00','Paytm Business':'Payin 10.00 - 100000.00' };
+    const PERSONAL_TOOLS = ['Freecharge','Mobikwik','Paytm','IndusPay','BharatpeBiz'];
+    const BUSINESS_TOOLS = ['Paytm Business'];
+    const walletListEl = document.getElementById('walletList');
+
+    function loadWallets() {
+        try { const data = localStorage.getItem(STORAGE_KEY); if (data) { const parsed = JSON.parse(data); if (Array.isArray(parsed)) { wallets = parsed; return; } } } catch(e) {}
+        wallets = [];
+    }
+    function saveWallets() { localStorage.setItem(STORAGE_KEY, JSON.stringify(wallets)); }
+    function renderTools() {
+        if (wallets.length === 0) { walletListEl.innerHTML = '<div class="empty-state"><div class="icon">&#8212;</div><div class="title">No wallets yet</div><div class="desc">Add a wallet to start depositing</div></div>'; return; }
+        let html = '';
+        wallets.forEach((w, i) => {
+            const logoUrl = LOGOS[w.service] || '';
+            const statusClass = w.enabled !== false ? '' : 'disabled';
+            const statusText = w.enabled !== false ? 'Enabled' : 'Disabled';
+            html += `<div class="wallet-item"><div class="left"><div class="logo-container">${logoUrl ? `<img src="${logoUrl}" alt="${w.service}" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\\'fallback\\'>${w.service.charAt(0)}</span>'">` : `<span class="fallback">${w.service.charAt(0)}</span>`}</div><div class="info"><div class="name">${w.service}</div><div class="upi">${w.upi}</div><div class="phone">${w.phone}</div><div class="limit">LimitedRange: 10.00 ~ 100000.00</div></div></div><div class="right"><button class="status-btn ${statusClass}" onclick="toggleStatus(${i})">${statusText}</button><button class="delete-btn" onclick="deleteWallet(${i})">&#10005;</button></div></div>`;
+        });
+        walletListEl.innerHTML = html;
+    }
+    window.toggleStatus = function(i) { if (i >= 0 && i < wallets.length) { wallets[i].enabled = wallets[i].enabled === false ? true : false; saveWallets(); renderTools(); } };
+    window.deleteWallet = function(i) { if (i >= 0 && i < wallets.length) { if (confirm('Remove this wallet?')) { wallets.splice(i, 1); saveWallets(); renderTools(); } } };
+
+    function renderToolList() {
+        const tools = currentTab === 'personal' ? PERSONAL_TOOLS : BUSINESS_TOOLS;
+        let html = '';
+        tools.forEach(t => {
+            const logoUrl = LOGOS[t] || '';
+            html += `<div class="at-item ${selectedTool === t ? 'selected' : ''}" onclick="selectTool('${t}')"><div class="logo-container">${logoUrl ? `<img src="${logoUrl}" alt="${t}" onerror="this.style.display='none';this.parentElement.innerHTML='<span class=\\'fallback\\'>${t.charAt(0)}</span>'">` : `<span class="fallback">${t.charAt(0)}</span>`}</div><div class="info"><div class="name">${t}</div><div class="range">${RANGES[t] || ''}</div></div></div>`;
+        });
+        document.getElementById('toolList').innerHTML = html;
+        document.getElementById('sureBtn').disabled = !selectedTool;
+    }
+    window.selectTool = function(tool) { selectedTool = tool; renderToolList(); };
+    function switchTab(tab) {
+        currentTab = tab; selectedTool = null;
+        document.querySelectorAll('.at-tab').forEach(el => { el.classList.toggle('active', el.textContent.toLowerCase() === tab); });
+        renderToolList();
+    }
+    window.switchTab = switchTab;
+    function handleSure() {
+        if (!selectedTool) return;
+        closeFullPage('addToolPage');
+        createData.service = selectedTool; createData.logo = LOGOS[selectedTool] || ''; createData.suffix = SUFFIXES[selectedTool] || '@pay'; createData.range = RANGES[selectedTool] || '';
+        document.getElementById('step1Content').style.display = 'block'; document.getElementById('step2Content').style.display = 'none'; document.getElementById('step3Content').style.display = 'none';
+        document.getElementById('step1Num').className = 'num active'; document.getElementById('step2Num').className = 'num'; document.getElementById('step3Num').className = 'num';
+        document.getElementById('step1Label').className = 'label active'; document.getElementById('step2Label').className = 'label'; document.getElementById('step3Label').className = 'label';
+        document.getElementById('createTitle').textContent = 'Create ' + selectedTool + ' Wallet';
+        document.getElementById('phoneInput').value = '';
+        openFullPage('walletCreatePage');
+    }
+    window.handleSure = handleSure;
+    function goToStep2() {
+        const phone = document.getElementById('phoneInput').value.replace(/\D/g, '');
+        if (phone.length !== 10) { alert('Please enter a valid 10-digit phone number.'); return; }
+        createData.phone = '+91 ' + phone; createData.upi = phone + createData.suffix;
+        document.getElementById('generatedUPI').textContent = createData.upi;
+        document.getElementById('genPlatform').textContent = createData.service;
+        document.getElementById('genPhone').textContent = createData.phone;
+        document.getElementById('step1Content').style.display = 'none'; document.getElementById('step2Content').style.display = 'block';
+        document.getElementById('step1Num').className = 'num done'; document.getElementById('step2Num').className = 'num active'; document.getElementById('step2Label').className = 'label active';
+    }
+    window.goToStep2 = goToStep2;
+    function goToStep3() {
+        document.getElementById('step2Content').style.display = 'none'; document.getElementById('step3Content').style.display = 'block';
+        document.getElementById('step2Num').className = 'num done'; document.getElementById('step3Num').className = 'num active'; document.getElementById('step3Label').className = 'label active';
+        document.getElementById('finishTitle').textContent = createData.service + ' Wallet';
+        document.getElementById('finishPhone').textContent = createData.phone;
+        document.getElementById('finishUPI').textContent = createData.upi;
+    }
+    window.goToStep3 = goToStep3;
+    function finishWallet() {
+        wallets.push({ service: createData.service, logo: createData.logo, phone: createData.phone, upi: createData.upi, enabled: true, range: createData.range });
+        saveWallets(); closeFullPage('walletCreatePage'); renderTools(); createData = {};
+        document.getElementById('step1Content').style.display = 'block'; document.getElementById('step2Content').style.display = 'none'; document.getElementById('step3Content').style.display = 'none';
+        document.getElementById('step1Num').className = 'num active'; document.getElementById('step2Num').className = 'num'; document.getElementById('step3Num').className = 'num';
+        document.getElementById('step1Label').className = 'label active'; document.getElementById('step2Label').className = 'label'; document.getElementById('step3Label').className = 'label';
+        document.getElementById('phoneInput').value = '';
+    }
+    window.finishWallet = finishWallet;
+    document.getElementById('addBtn').addEventListener('click', function() {
+        selectedTool = null; currentTab = 'personal';
+        document.querySelectorAll('.at-tab').forEach(el => { el.classList.toggle('active', el.textContent.toLowerCase() === 'personal'); });
+        renderToolList(); openFullPage('addToolPage');
+    });
+    document.getElementById('phoneInput').addEventListener('input', function() { this.value = this.value.replace(/\D/g, '').slice(0, 10); });
+
+    function applyFilter(val) {
+        document.querySelectorAll('.filter').forEach(f => f.classList.remove('active'));
+        document.querySelector(`.filter[data-filter="${val}"]`).classList.add('active');
+        document.querySelectorAll('.payment-card').forEach(c => { c.classList.toggle('hidden', val !== 'all' && parseInt(c.dataset.amount) < parseInt(val)); });
+    }
+    function handleClaim(btn, code, amt, inc, cpn) {
+        document.getElementById('orderAmount').textContent = amt + '.00';
+        switchPage('order');
+    }
+
+    let otSec = 415;
+    function copyText(text) {
+        if (navigator.clipboard) { navigator.clipboard.writeText(text).then(() => alert("Copied: " + text)).catch(() => alert("Copied: " + text)); }
+        else { alert("Copied: " + text); }
+    }
+    function uploadOrderFile(input) {
+        if (!input.files.length) return;
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('orderPreviewImg').src = e.target.result;
+            document.getElementById('orderFileName').textContent = file.name;
+            document.getElementById('orderPreview').classList.add('show');
+            document.getElementById('orderPlaceholder').classList.add('hidden');
+            document.getElementById('orderUploadArea').classList.add('has-file');
+        };
+        reader.readAsDataURL(file);
+    }
+    function removeOrderFile(e) {
+        e.stopPropagation();
+        document.getElementById('orderPreview').classList.remove('show');
+        document.getElementById('orderPlaceholder').classList.remove('hidden');
+        document.getElementById('orderUploadArea').classList.remove('has-file');
+        document.getElementById('orderVoucher').value = '';
+    }
+    function goToNext() {
+        const input = document.getElementById('orderVoucher');
+        if (!input.files.length) { alert('Please upload voucher first'); return; }
+        const amt = document.getElementById('orderAmount').textContent || '285.00';
+        setTimeout(() => { document.getElementById('doneSub').innerHTML = 'Order confirmed successfully!<br>Amount: INR ' + amt; switchPage('done'); }, 800);
+    }
+    function closeDone() { switchPage('payment'); }
+
+    setInterval(() => {
+        if (otSec <= 0) return; otSec--;
+        const el = document.getElementById('orderTimer');
+        if (el) el.textContent = String(Math.floor(otSec / 60)).padStart(2, '0') + ':' + String(otSec % 60).padStart(2, '0');
+    }, 1000);
+
+    function switchTaskTab(tab) {
+        document.querySelectorAll('.task-tab').forEach(t => { t.classList.toggle('active', t.textContent.toLowerCase().includes(tab === 'newbie' ? 'newbie' : tab === 'team' ? 'team' : 'daily')); });
+        document.querySelectorAll('.task-content').forEach(c => { c.classList.toggle('active', c.id === 'task-' + tab); });
+    }
+    function switchOrderTab(tab) {
+        document.querySelectorAll('.order-tab').forEach(t => { t.classList.toggle('active', t.textContent.toLowerCase() === tab); });
+        document.querySelectorAll('.order-content').forEach(c => { c.classList.toggle('active', c.id === 'order-' + tab); });
+    }
+    function switchCurrency(el, cur) { document.querySelectorAll('.currency-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); }
+    function toggleSell() {
+        const btn = document.getElementById('sellBtn');
+        if (btn.textContent === 'Closed Selling') { btn.textContent = 'Start Selling'; btn.className = 'sell-btn open'; }
+        else { btn.textContent = 'Closed Selling'; btn.className = 'sell-btn closed'; }
+    }
+    function shareTo(platform) { alert('Share to ' + platform + '\n\nSharing LGPay app link...'); }
+    function copyLink() {
+        if (navigator.clipboard) { navigator.clipboard.writeText("cN0kyr").then(() => alert("Link copied: cN0kyr")).catch(() => alert("Link copied: cN0kyr")); }
+        else { alert("Link copied: cN0kyr"); }
+    }
+    function openFullPage(id) { document.getElementById(id).classList.add('show'); document.body.style.overflow = 'hidden'; }
+    function closeFullPage(id) { document.getElementById(id).classList.remove('show'); document.body.style.overflow = ''; }
+    function copyID() {
+        if (navigator.clipboard) { navigator.clipboard.writeText("252600").then(() => alert("ID copied: 252600")).catch(() => alert("ID copied: 252600")); }
+        else { alert("ID copied: 252600"); }
+    }
+
+    window.switchPage = switchPage; window.switchTaskTab = switchTaskTab; window.switchOrderTab = switchOrderTab;
+    window.switchCurrency = switchCurrency; window.openFullPage = openFullPage; window.closeFullPage = closeFullPage;
+    window.applyFilter = applyFilter; window.handleClaim = handleClaim; window.toggleSell = toggleSell;
+    window.shareTo = shareTo; window.copyLink = copyLink; window.copyID = copyID;
+    window.selectChain = selectChain; window.handleDeposit = handleDeposit; window.copyText = copyText;
+    window.uploadOrderFile = uploadOrderFile; window.removeOrderFile = removeOrderFile;
+    window.goToNext = goToNext; window.closeDone = closeDone;
+
+    loadWallets(); renderTools(); renderToolList();
+</script>
+
+</body>
+</html>
